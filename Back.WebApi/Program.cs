@@ -1,41 +1,77 @@
+using Back.Application.Extensions;
+using Back.Infrastructure.Extensions;
+using Back.Infrastructure.Persistence;
+using Back.WebApi;
+using Back.WebApi.Middleware;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi.Models;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RegisteredUser", policy =>
+        policy.RequireAuthenticatedUser());
+
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddCors(opts =>
+  opts.AddDefaultPolicy(p =>
+    p.WithOrigins("http://localhost:3000")
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()
+  ));
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
+    var identityDb = services.GetRequiredService<IdentityDbContext>();
+    identityDb.Database.Migrate();
+
+    AdminSeeder.SeedAsync(services).GetAwaiter().GetResult();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// В конце сборки приложения, перед MapControllers / Run():
+var env = builder.Environment;
 
-app.MapGet("/weatherforecast", () =>
+// убедиться, что папка существует
+var uploadsDir = Path.Combine(env.ContentRootPath, "Uploads");
+if (!Directory.Exists(uploadsDir))
+    Directory.CreateDirectory(uploadsDir);
+
+// раздаём файлы из /Uploads по адресу /uploads
+app.UseStaticFiles(new StaticFileOptions
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    FileProvider = new PhysicalFileProvider(uploadsDir),
+    RequestPath = "/uploads"
+});
+
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
