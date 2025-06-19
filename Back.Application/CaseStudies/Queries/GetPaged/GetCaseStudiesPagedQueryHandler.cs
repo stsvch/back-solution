@@ -15,10 +15,10 @@ namespace Back.Application.CaseStudies.Queries.GetPaged
     public class GetCaseStudiesPagedQueryHandler
             : IRequestHandler<GetCaseStudiesPagedQuery, PagedList<CaseStudyDto>>
     {
-        private readonly IRepository<CaseStudy> _repo;
+        private readonly IContentRepository<CaseStudy> _repo;
         private readonly IMapper _mapper;
         public GetCaseStudiesPagedQueryHandler(
-            IRepository<CaseStudy> repo,
+            IContentRepository<CaseStudy> repo,
             IMapper mapper)
         {
             _repo = repo;
@@ -29,7 +29,7 @@ namespace Back.Application.CaseStudies.Queries.GetPaged
             GetCaseStudiesPagedQuery request,
             CancellationToken cancellationToken)
         {
-            var paged = await _repo.GetPagedAsync(
+            var paged = await _repo.GetPagedWithPhotosAsync(
                 request.PageNumber, request.PageSize, cancellationToken);
 
             var dtos = paged.Items

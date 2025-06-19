@@ -14,11 +14,11 @@ namespace Back.Application.Developments.Queries.GetById
     public class GetDevelopmentByIdQueryHandler
         : IRequestHandler<GetDevelopmentByIdQuery, DevelopmentDto>
     {
-        private readonly IRepository<Development> _repo;
+        private readonly IContentRepository<Development> _repo;
         private readonly IMapper _mapper;
 
         public GetDevelopmentByIdQueryHandler(
-            IRepository<Development> repo,
+            IContentRepository<Development> repo,
             IMapper mapper)
         {
             _repo = repo;
@@ -29,7 +29,7 @@ namespace Back.Application.Developments.Queries.GetById
             GetDevelopmentByIdQuery request,
             CancellationToken cancellationToken)
         {
-            var dev = await _repo.GetByIdAsync(request.Id, cancellationToken)
+            var dev = await _repo.GetByIdWithPhotosAsync(request.Id, cancellationToken)
                       ?? throw new KeyNotFoundException("Development not found");
             return _mapper.Map<DevelopmentDto>(dev);
         }

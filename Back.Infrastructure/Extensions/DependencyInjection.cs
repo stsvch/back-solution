@@ -86,6 +86,7 @@ namespace Back.Infrastructure.Extensions
 
             services.AddAuthorization();
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            services.AddScoped(typeof(IContentRepository<>), typeof(ContentRepository<>));
 
             services.AddScoped<IAuthService, AuthService>();
 

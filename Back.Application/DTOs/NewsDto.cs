@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Back.Application.DTOs
 {
-    internal class NewsDto
-    {
-    }
+    public record NewsDto(
+        Guid Id,
+        string Title,
+        string Description,
+        IEnumerable<string> PhotoPaths
+    );
 }

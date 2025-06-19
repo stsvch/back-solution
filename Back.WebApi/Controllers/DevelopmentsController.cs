@@ -1,10 +1,12 @@
 ﻿using Back.Application.Common;
+using Back.Application.Developments.Commands.AddPhotoToDevelopment;
 using Back.Application.Developments.Commands.CreateDevelopment;
 using Back.Application.Developments.Commands.DeleteDevelopment;
 using Back.Application.Developments.Commands.UpdateDevelopment;
 using Back.Application.Developments.Queries.GetById;
 using Back.Application.Developments.Queries.GetPaged;
 using Back.Application.DTOs;
+using Back.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +17,39 @@ namespace Back.WebApi.Controllers
     public class DevelopmentsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IFileStorageService _storage;
 
-        public DevelopmentsController(IMediator mediator)
+        public DevelopmentsController(IMediator mediator, IFileStorageService storage)
         {
             _mediator = mediator;
+            _storage = storage;
+        }
+
+        // POST api/developments/{id}/photos
+        [HttpPost("{id:guid}/photos")]
+        public async Task<IActionResult> UploadAndAddPhoto(
+            Guid id,
+            [FromForm] IFormFile file,
+            CancellationToken ct = default)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Файл не прикреплён");
+
+            // 1) Сохраняем файл на диск (или в облако) и получаем URL/путь
+            var path = await _storage.SaveFileAsync(file);
+
+            // 2) Вызываем команду, которая подхватит сохранённый путь
+            var photoId = await _mediator.Send(
+                new AddPhotoToDevelopmentCommand(id, path),
+                ct
+            );
+
+            // 3) Возвращаем и Id новой фотографии, и путь
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = id },
+                new { PhotoId = photoId, Path = path }
+            );
         }
 
         // GET api/developments?pageNumber=1&pageSize=10

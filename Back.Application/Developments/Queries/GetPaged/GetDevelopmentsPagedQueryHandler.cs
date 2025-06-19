@@ -15,11 +15,11 @@ namespace Back.Application.Developments.Queries.GetPaged
     public class GetDevelopmentsPagedQueryHandler
         : IRequestHandler<GetDevelopmentsPagedQuery, PagedList<DevelopmentDto>>
     {
-        private readonly IRepository<Development> _repo;
+        private readonly IContentRepository<Development> _repo;
         private readonly IMapper _mapper;
 
         public GetDevelopmentsPagedQueryHandler(
-            IRepository<Development> repo,
+            IContentRepository<Development> repo,
             IMapper mapper)
         {
             _repo = repo;
@@ -30,7 +30,7 @@ namespace Back.Application.Developments.Queries.GetPaged
             GetDevelopmentsPagedQuery request,
             CancellationToken cancellationToken)
         {
-            var paged = await _repo.GetPagedAsync(
+            var paged = await _repo.GetPagedWithPhotosAsync(
                 request.PageNumber,
                 request.PageSize,
                 cancellationToken);

@@ -1,10 +1,13 @@
-﻿using Back.Application.CaseStudies.Commands.CreateCaseStudy;
+﻿using Back.Application.CaseStudies.Commands.AddPhotoToCaseStudy;
+using Back.Application.CaseStudies.Commands.CreateCaseStudy;
 using Back.Application.CaseStudies.Commands.DeleteCaseStudy;
+using Back.Application.CaseStudies.Commands.RemovePhotoFromCaseStudy;
 using Back.Application.CaseStudies.Commands.UpdateCaseStudy;
 using Back.Application.CaseStudies.Queries.GetById;
 using Back.Application.CaseStudies.Queries.GetPaged;
 using Back.Application.Common;
 using Back.Application.DTOs;
+using Back.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,8 +18,51 @@ namespace Back.WebApi.Controllers
     public class CaseStudiesController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public CaseStudiesController(IMediator mediator)
-            => _mediator = mediator;
+        private readonly IFileStorageService _storage;
+        public CaseStudiesController(
+            IMediator mediator,
+            IFileStorageService storage)
+        {
+            _mediator = mediator;
+            _storage = storage;
+        }
+
+        // POST api/casestudies/{id}/photos
+        [HttpPost("{id:guid}/photos")]
+        public async Task<IActionResult> UploadAndAddPhoto(
+            Guid id,
+            [FromForm] IFormFile file,
+            CancellationToken ct = default)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Файл не прикреплён");
+
+            // сохраняем файл и получаем путь
+            var path = await _storage.SaveFileAsync(file);
+
+            // создаём фото в агрегате
+            var photoId = await _mediator.Send(
+                new AddPhotoToCaseStudyCommand(id, path), ct);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id },
+                new { photoId, path }
+            );
+        }
+
+        // DELETE api/casestudies/{id}/photos/{photoId}
+        [HttpDelete("{id:guid}/photos/{photoId:guid}")]
+        public async Task<IActionResult> RemovePhoto(
+            Guid id,
+            Guid photoId,
+            CancellationToken ct = default)
+        {
+            await _mediator.Send(
+                new RemovePhotoFromCaseStudyCommand(id, photoId),
+                ct);
+            return NoContent();
+        }
 
         [HttpGet]
         public async Task<ActionResult<PagedList<CaseStudyDto>>> GetAll(

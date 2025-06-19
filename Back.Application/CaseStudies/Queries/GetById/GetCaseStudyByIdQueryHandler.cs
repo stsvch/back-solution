@@ -14,10 +14,10 @@ namespace Back.Application.CaseStudies.Queries.GetById
     public class GetCaseStudyByIdQueryHandler
         : IRequestHandler<GetCaseStudyByIdQuery, CaseStudyDto>
     {
-        private readonly IRepository<CaseStudy> _repo;
+        private readonly IContentRepository<CaseStudy> _repo;
         private readonly IMapper _mapper;
         public GetCaseStudyByIdQueryHandler(
-            IRepository<CaseStudy> repo,
+            IContentRepository<CaseStudy> repo,
             IMapper mapper)
         {
             _repo = repo;
@@ -28,7 +28,7 @@ namespace Back.Application.CaseStudies.Queries.GetById
             GetCaseStudyByIdQuery request,
             CancellationToken cancellationToken)
         {
-            var cs = await _repo.GetByIdAsync(request.Id, cancellationToken)
+            var cs = await _repo.GetByIdWithPhotosAsync(request.Id, cancellationToken)
                      ?? throw new KeyNotFoundException("CaseStudy not found");
             return _mapper.Map<CaseStudyDto>(cs);
         }
