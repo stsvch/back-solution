@@ -16,8 +16,6 @@ namespace Back.Application.News.Commands.CreateNews
                 .NotEmpty().MaximumLength(200);
             RuleFor(x => x.Description)
                 .NotEmpty().MaximumLength(2000);
-            RuleForEach(x => x.PhotoPaths)
-                .NotEmpty();
         }
     }
 }

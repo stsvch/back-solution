@@ -19,5 +19,7 @@ namespace Back.Domain.Repositories
             int pageNumber,
             int pageSize,
             CancellationToken cancellationToken = default);
+
+        Task<Guid> AddPhotoAsync(Guid id, string photoPath, CancellationToken cancellationToken = default);
     }
 }

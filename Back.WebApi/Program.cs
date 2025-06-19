@@ -1,6 +1,8 @@
 using Back.Application.Extensions;
+using Back.Domain.Repositories;
 using Back.Infrastructure.Extensions;
 using Back.Infrastructure.Persistence;
+using Back.Infrastructure.Repositories;
 using Back.WebApi;
 using Back.WebApi.Middleware;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Регистрация репозиториев
+builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
 builder.Services.AddAuthorization(options =>
 {
@@ -32,6 +36,7 @@ builder.Services.AddCors(opts =>
      .AllowAnyHeader()
      .AllowAnyMethod()
      .AllowCredentials()
+     .WithExposedHeaders("Location")
   ));
 
 

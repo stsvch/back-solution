@@ -81,7 +81,11 @@ namespace Back.WebApi.Controllers
             CancellationToken ct = default)
         {
             var newId = await _mediator.Send(command, ct);
-            return CreatedAtAction(nameof(GetById), new { id = newId }, null);
+            return CreatedAtAction(
+              nameof(GetById),
+              new { id = newId },
+              new { id = newId }         // <-- вот это добавили
+            );
         }
 
         // PUT api/developments/{id}

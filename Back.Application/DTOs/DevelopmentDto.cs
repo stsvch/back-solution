@@ -1,15 +1,21 @@
-﻿using System;
+﻿// Back.Application.DTOs/DevelopmentDto.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Back.Application.DTOs
 {
-    public record DevelopmentDto(
-        Guid Id,
-        string Title,
-        string Description,
-        IEnumerable<string> PhotoPaths
-    );
+    public record DevelopmentDto
+    {
+        public Guid Id { get; init; }
+        public string Title { get; init; }
+        public string Description { get; init; }
+        public IEnumerable<string> PhotoPaths { get; init; }
+
+        // parameterless constructor для AutoMapper
+        public DevelopmentDto()
+        {
+            PhotoPaths = Enumerable.Empty<string>();
+        }
+    }
 }

@@ -18,8 +18,6 @@ namespace Back.Application.CaseStudies.Commands.CreateCaseStudy
             RuleFor(x => x.Description)
                 .NotEmpty()
                 .MaximumLength(2000);
-            RuleForEach(x => x.PhotoPaths)
-                .NotEmpty();
         }
     }
 }

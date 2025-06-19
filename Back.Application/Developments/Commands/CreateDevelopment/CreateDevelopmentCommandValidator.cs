@@ -16,8 +16,6 @@ namespace Back.Application.Developments.Commands.CreateDevelopment
                 .NotEmpty().MaximumLength(200);
             RuleFor(x => x.Description)
                 .NotEmpty().MaximumLength(2000);
-            RuleForEach(x => x.PhotoPaths)
-                .NotEmpty();
         }
     }
 }

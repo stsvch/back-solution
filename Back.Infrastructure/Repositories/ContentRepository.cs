@@ -46,5 +46,36 @@ namespace Back.Infrastructure.Repositories
 
             return new PagedList<T>(items, total);
         }
+
+        public async Task<Guid> AddPhotoAsync(
+                Guid parentId,
+                string photoPath,
+                CancellationToken cancellationToken = default)
+        {
+            // 1) проверяем, что родитель существует
+            var exists = await _context.Set<T>()
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == parentId, cancellationToken);
+            if (!exists)
+                throw new KeyNotFoundException($"{typeof(T).Name} {parentId} not found");
+
+            // 2) создаём новую Photo
+            var photo = new Photo(photoPath);
+
+            // 3) добавляем её в контекст
+            _context.Set<Photo>().Add(photo);
+
+            // 4) динамически выставляем FK-колонку
+            //    e.g. T = Development  → fkName = "DevelopmentId"
+            var fkName = typeof(T).Name + "Id";
+            _context.Entry(photo)
+                .Property(fkName)
+                .CurrentValue = parentId;
+
+            // 5) сохраняем — INSERT Photos
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return photo.Id;
+        }
     }
 }
