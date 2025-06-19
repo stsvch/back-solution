@@ -1,43 +1,34 @@
-# ====================
-# 1) Build stage
-# ====================
+# === Stage 1: build ===
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Копируем только csproj-ы для кэширования слоёв
-COPY ["Back.Domain/Back.Domain.csproj",       "Back.Domain/"]
+COPY ["Back.Domain/Back.Domain.csproj",         "Back.Domain/"]
 COPY ["Back.Application/Back.Application.csproj","Back.Application/"]
 COPY ["Back.Infrastructure/Back.Infrastructure.csproj","Back.Infrastructure/"]
-COPY ["Back.WebApi/Back.WebApi.csproj",       "Back.WebApi/"]
-
-# Восстанавливаем зависимости
+COPY ["Back.WebApi/Back.WebApi.csproj",         "Back.WebApi/"]
 RUN dotnet restore "Back.WebApi/Back.WebApi.csproj"
 
-# Копируем остальное решение
 COPY . .
-
-# Публикуем в папку /app/publish
 WORKDIR "/src/Back.WebApi"
 RUN dotnet publish -c Release -o /app/publish
 
-# ====================
-# 2) Runtime stage
-# ====================
+# === Stage 2: runtime ===
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-# Копируем готовые артефакты
-COPY --from=build /app/publish .
+# копируем скомпилированные артефакты и сертификат
+COPY --from=build /app/publish ./
+COPY Back.WebApi/localhost.pfx /https/localhost.pfx
 
-# Создаём папку для загружаемых фото
+# папка для загрузок
 RUN mkdir -p /app/Uploads
-
-# Объявляем точку монтирования (вы потом при docker run сможете монтировать в неё внешний каталог)
 VOLUME [ "/app/Uploads" ]
 
-# Открываем порты (если в launchSettings они 5144/7188 — прокиньте их при docker run)
-EXPOSE 5144
-EXPOSE 7188
+# слушаем HTTP и HTTPS(7102)
+ENV ASPNETCORE_URLS="http://+:5144;https://+:7102"
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password=MyPfxPassword
 
-# Точка входа
+EXPOSE 5144 7102
+
 ENTRYPOINT ["dotnet", "Back.WebApi.dll"]
