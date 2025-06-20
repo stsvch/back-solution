@@ -1,15 +1,13 @@
-﻿using System;
+﻿// Back.Application.DTOs/CaseStudyDto.cs
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Back.Application.DTOs
+public class CaseStudyDto
 {
-    public record CaseStudyDto(
-        Guid Id,
-        string Title,
-        string Description,
-        IEnumerable<string> PhotoPaths
-    );
+    public Guid Id { get; init; }
+    public string Title { get; init; }
+    public string Description { get; init; }
+    public IEnumerable<string> PhotoPaths { get; init; }
+
+    public CaseStudyDto() => PhotoPaths = Array.Empty<string>();
 }

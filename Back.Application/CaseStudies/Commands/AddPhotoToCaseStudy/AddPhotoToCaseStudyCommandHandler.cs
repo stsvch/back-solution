@@ -22,14 +22,8 @@ namespace Back.Application.CaseStudies.Commands.AddPhotoToCaseStudy
             AddPhotoToCaseStudyCommand request,
             CancellationToken ct)
         {
-            var cs = await _repo.GetByIdWithPhotosAsync(
-                        request.CaseStudyId, ct)
-                     ?? throw new KeyNotFoundException("CaseStudy not found");
+            return await _repo.AddPhotoAsync(request.CaseStudyId, request.PhotoPath, ct);
 
-            cs.AddPhoto(request.PhotoPath);
-            await _repo.UpdateAsync(cs, ct);
-
-            return cs.Photos.Last().Id;
         }
     }
 }
