@@ -2,6 +2,8 @@
 using Back.Application.Developments.Commands.AddPhotoToDevelopment;
 using Back.Application.Developments.Commands.CreateDevelopment;
 using Back.Application.Developments.Commands.DeleteDevelopment;
+using Back.Application.Developments.Commands.RemovePhotoByPathFromDevelopment;
+using Back.Application.Developments.Commands.RemovePhotoFromDevelopment;
 using Back.Application.Developments.Commands.UpdateDevelopment;
 using Back.Application.Developments.Queries.GetById;
 using Back.Application.Developments.Queries.GetPaged;
@@ -25,7 +27,6 @@ namespace Back.WebApi.Controllers
             _storage = storage;
         }
 
-        // POST api/developments/{id}/photos
         [HttpPost("{id:guid}/photos")]
         public async Task<IActionResult> UploadAndAddPhoto(
             Guid id,
@@ -35,22 +36,24 @@ namespace Back.WebApi.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("Файл не прикреплён");
 
-            // 1) Сохраняем файл на диск (или в облако) и получаем URL/путь
-            var path = await _storage.SaveFileAsync(file);
+            // 1) Сохраняем на диск и получаем относительный путь
+            //    например "/uploads/1c0abcbe5cc7.png"
+            var relativePath = await _storage.SaveFileAsync(file);
 
-            // 2) Вызываем команду, которая подхватит сохранённый путь
+            // 2) Добавляем в БД связь и получаем GUID фото
             var photoId = await _mediator.Send(
-                new AddPhotoToDevelopmentCommand(id, path),
-                ct
-            );
+                new AddPhotoToDevelopmentCommand(id, relativePath),
+                ct);
 
-            // 3) Возвращаем и Id новой фотографии, и путь
+            // 3) Отдаём клиенту DTO со свежим относительным URL
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = id },
-                new { PhotoId = photoId, Path = path }
+                new { id },
+                new { PhotoId = photoId, Path = relativePath }
             );
         }
+
+
 
         // GET api/developments?pageNumber=1&pageSize=10
         [HttpGet]
@@ -86,6 +89,33 @@ namespace Back.WebApi.Controllers
               new { id = newId },
               new { id = newId }         // <-- вот это добавили
             );
+        }
+
+        // DELETE api/developments/{id}/photos/{photoId}
+        [HttpDelete("{id:guid}/photos/{photoId:guid}")]
+        public async Task<IActionResult> RemovePhoto(
+            Guid id,
+            Guid photoId,
+            CancellationToken ct = default)
+        {
+            // Ваша команда, удаляющая связь и сам файл:
+            await _mediator.Send(new RemovePhotoFromDevelopmentCommand(id, photoId), ct);
+            return NoContent();
+        }
+
+
+        // DELETE api/developments/{id}/photos?path=...
+        [HttpDelete("{id:guid}/photos")]
+        public async Task<IActionResult> RemovePhotoByPath(
+            Guid id,
+            [FromQuery] string path,
+            CancellationToken ct = default)
+        {
+            await _mediator.Send(
+                new RemovePhotoByPathFromDevelopmentCommand(id, path),
+                ct
+            );
+            return NoContent();
         }
 
         // PUT api/developments/{id}

@@ -10,7 +10,6 @@ namespace Back.Application.Developments.Commands.UpdateDevelopment
     public record UpdateDevelopmentCommand(
         Guid Id,
         string Title,
-        string Description,
-        List<string> PhotoPaths
+        string Description
     ) : IRequest<Unit>;
 }

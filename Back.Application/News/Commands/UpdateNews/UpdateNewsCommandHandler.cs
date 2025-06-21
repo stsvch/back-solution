@@ -26,11 +26,6 @@ namespace Back.Application.News.Commands.UpdateNews
             news.ChangeTitle(request.Title);
             news.ChangeDescription(request.Description);
 
-            // Перестроить коллекцию фото
-            foreach (var pic in news.Photos.ToList())
-                news.RemovePhoto(pic);
-            foreach (var p in request.PhotoPaths)
-                news.AddPhoto(p);
 
             await _repo.UpdateAsync(news, cancellationToken);
             return Unit.Value;

@@ -27,12 +27,6 @@ namespace Back.Application.Developments.Commands.UpdateDevelopment
             dev.ChangeTitle(request.Title);
             dev.ChangeDescription(request.Description);
 
-            // Перестроим фото
-            foreach (var photo in dev.Photos.ToList())
-                dev.RemovePhoto(photo);
-            foreach (var path in request.PhotoPaths)
-                dev.AddPhoto(path);
-
             await _repo.UpdateAsync(dev, cancellationToken);
             return Unit.Value;
         }

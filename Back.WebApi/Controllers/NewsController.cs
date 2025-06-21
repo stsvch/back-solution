@@ -4,6 +4,7 @@ using Back.Application.Interfaces;
 using Back.Application.News.Commands.AddPhotoToNews;
 using Back.Application.News.Commands.CreateNews;
 using Back.Application.News.Commands.DeleteNews;
+using Back.Application.News.Commands.RemovePhotoByPathFromNews;
 using Back.Application.News.Commands.RemovePhotoFromNews;
 using Back.Application.News.Commands.UpdateNews;
 using Back.Application.News.Queries.GetById;
@@ -38,15 +39,15 @@ namespace Back.WebApi.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("Файл не прикреплён");
 
-            var path = await _storage.SaveFileAsync(file);
+            var relativePath = await _storage.SaveFileAsync(file);
 
             var photoId = await _mediator.Send(
-                new AddPhotoToNewsCommand(id, path), ct);
+                new AddPhotoToNewsCommand(id, relativePath), ct);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id },
-                new { photoId, path }
+                new { photoId, relativePath }
             );
         }
 
@@ -111,6 +112,18 @@ namespace Back.WebApi.Controllers
             CancellationToken ct = default)
         {
             await _mediator.Send(new DeleteNewsCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:guid}/photos")]
+        public async Task<IActionResult> RemovePhotoByPath(
+        Guid id,
+        [FromQuery] string path,
+        CancellationToken ct = default)
+        {
+            await _mediator.Send(
+                new RemovePhotoByPathFromNewsCommand(id, path),
+                ct);
             return NoContent();
         }
     }

@@ -16,17 +16,6 @@ namespace Back.Application.Developments.Commands.UpdateDevelopment
             RuleFor(x => x.Id)
                 .NotEmpty();
 
-            // Вставляем сюда же все правила из CreateDevelopmentCommandValidator:
-            RuleFor(x => x.Title)
-                .NotEmpty()
-                .MaximumLength(200);
-
-            RuleFor(x => x.Description)
-                .NotEmpty()
-                .MaximumLength(2000);
-
-            RuleForEach(x => x.PhotoPaths)
-                .NotEmpty();
         }
     }
 }

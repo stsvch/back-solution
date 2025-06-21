@@ -26,12 +26,6 @@ namespace Back.Application.CaseStudies.Commands.UpdateCaseStudy
             cs.ChangeTitle(request.Title);
             cs.ChangeDescription(request.Description);
 
-            // перестроить фото
-            foreach (var photo in cs.Photos.ToList())
-                cs.RemovePhoto(photo);
-            foreach (var path in request.PhotoPaths)
-                cs.AddPhoto(path);
-
             await _repo.UpdateAsync(cs, cancellationToken);
             return Unit.Value;
         }

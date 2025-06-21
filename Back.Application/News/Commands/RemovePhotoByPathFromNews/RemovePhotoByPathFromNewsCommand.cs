@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Back.Application.News.Commands.UpdateNews
+namespace Back.Application.News.Commands.RemovePhotoByPathFromNews
 {
-    public record UpdateNewsCommand(
-        Guid Id,
-        string Title,
-        string Description
+    public record RemovePhotoByPathFromNewsCommand(
+        Guid NewsId,
+        string Path
     ) : IRequest<Unit>;
 }

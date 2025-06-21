@@ -1,6 +1,7 @@
 ﻿using Back.Application.CaseStudies.Commands.AddPhotoToCaseStudy;
 using Back.Application.CaseStudies.Commands.CreateCaseStudy;
 using Back.Application.CaseStudies.Commands.DeleteCaseStudy;
+using Back.Application.CaseStudies.Commands.RemovePhotoByPathFromCaseStudy;
 using Back.Application.CaseStudies.Commands.RemovePhotoFromCaseStudy;
 using Back.Application.CaseStudies.Commands.UpdateCaseStudy;
 using Back.Application.CaseStudies.Queries.GetById;
@@ -38,16 +39,16 @@ namespace Back.WebApi.Controllers
                 return BadRequest("Файл не прикреплён");
 
             // сохраняем файл и получаем путь
-            var path = await _storage.SaveFileAsync(file);
+            var relativePath = await _storage.SaveFileAsync(file);
 
             // создаём фото в агрегате
             var photoId = await _mediator.Send(
-                new AddPhotoToCaseStudyCommand(id, path), ct);
+                new AddPhotoToCaseStudyCommand(id, relativePath), ct);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id },
-                new { photoId, path }
+                new { photoId, relativePath }
             );
         }
 
@@ -103,6 +104,19 @@ namespace Back.WebApi.Controllers
             if (id != cmd.Id)
                 return BadRequest("Id mismatch");
             await _mediator.Send(cmd, ct);
+            return NoContent();
+        }
+
+        // DELETE api/casestudies/{id}/photos?path=...
+        [HttpDelete("{id:guid}/photos")]
+        public async Task<IActionResult> RemovePhotoByPath(
+            Guid id,
+            [FromQuery] string path,
+            CancellationToken ct = default)
+        {
+            await _mediator.Send(
+                new RemovePhotoByPathFromCaseStudyCommand(id, path),
+                ct);
             return NoContent();
         }
 

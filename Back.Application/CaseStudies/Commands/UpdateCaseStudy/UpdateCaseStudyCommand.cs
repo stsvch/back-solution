@@ -10,7 +10,6 @@ namespace Back.Application.CaseStudies.Commands.UpdateCaseStudy
     public record UpdateCaseStudyCommand(
         Guid Id,
         string Title,
-        string Description,
-        List<string> PhotoPaths
+        string Description
     ) : IRequest<Unit>;
 }
